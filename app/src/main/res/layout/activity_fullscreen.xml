@@ -1,0 +1,57 @@
+<LinearLayout android:id="@+id/fullscreen_content"
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#000000"
+              android:gravity="center"
+              android:orientation="vertical"
+              android:keepScreenOn="true"
+              tools:context="com.cauchymop.sherclockhome.FullscreenActivity">
+
+    <TextView
+        android:id="@+id/day"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:keepScreenOn="true"
+        android:textColor="#EAEAEA"
+        android:textSize="56sp"
+        android:textStyle="bold"
+        tools:text="Vendredi"/>
+
+    <TextView
+        android:id="@+id/date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:keepScreenOn="true"
+        android:textColor="#EAEAEA"
+        android:textSize="56sp"
+        android:textStyle="bold"
+        tools:text="24 Septembre 2022"/>
+
+    <TextView
+        android:id="@+id/time"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:keepScreenOn="true"
+        android:textColor="#EAEAEA"
+        android:textSize="64sp"
+        android:textStyle="bold"
+        tools:text="15:44"/>
+
+    <TextView
+        android:id="@+id/calendarEvent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:keepScreenOn="true"
+        android:textColor="#00FF00"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        tools:text="RDV rue de la paix, si vous passez par la case départ, recevez 20000 francs"/>
+
+
+</LinearLayout>
