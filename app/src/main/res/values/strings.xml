@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SherClockHome</string>
+    <string name="today_format">Today at %1$s - %2$s</string>
+    <string name="tomorrow_format">Tomorrow at %1$s - %2$s</string>
+</resources>

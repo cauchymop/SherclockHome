@@ -1,0 +1,13 @@
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Intellij project files
+.idea
+
+# Mac specific files
+.DS_Store
+
+# Android Studio Files
+*.iml
+.gradle/
+build/
