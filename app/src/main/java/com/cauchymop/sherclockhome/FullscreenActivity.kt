@@ -2,11 +2,13 @@ package com.cauchymop.sherclockhome
 
 import android.Manifest.permission
 import android.Manifest.permission.READ_CALENDAR
+import android.content.ContentUris
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.Handler
 import android.provider.BaseColumns
-import android.provider.CalendarContract.Events.*
+import android.provider.CalendarContract.Events.TITLE
+import android.provider.CalendarContract.Instances
+import android.provider.CalendarContract.Instances.BEGIN
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat.checkSelfPermission
 import android.support.v7.app.AppCompatActivity
@@ -24,29 +26,59 @@ private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
 class FullscreenActivity : AppCompatActivity() {
 
+    private val timer = Timer()
+    private lateinit var timeUpdaterTask: TimerTask
+    private lateinit var calendarUpdaterTask: TimerTask
+    private val updateTimeFunction = { updateTime() }
+    private val updateCalendarFunction = {
+        if (checkSelfPermission(this, permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
+            updateCalendar()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fullscreen)
     }
 
+    override fun onResume() {
+        super.onResume()
+        timeUpdaterTask = object : TimerTask() {
+            override fun run() {
+                runOnUiThread(updateTimeFunction)
+            }
+        }
+        calendarUpdaterTask = object : TimerTask() {
+            override fun run() {
+                runOnUiThread(updateCalendarFunction)
+            }
+        }
+        timer.schedule(timeUpdaterTask, Date(), TimeUnit.SECONDS.toMillis(5))
+        timer.schedule(calendarUpdaterTask, Date(), TimeUnit.MINUTES.toMillis(30))
+    }
+
+    override fun onPause() {
+        super.onPause()
+        timeUpdaterTask.cancel()
+        calendarUpdaterTask.cancel()
+        timer.purge()
+    }
+
     override fun onStart() {
         super.onStart()
-        updateTime()
         requestPermissionIfNeeded()
     }
+
 
     private fun updateTime() {
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN
         val now = Date()
         val today = dayFormat.format(now).capitalize()
         day.text = today
-        date.text = dateFormat.format(now)
-        time.text = timeFormat.format(now)
-        Handler().postDelayed({ updateTime() }, TimeUnit.SECONDS.toMillis(5))
-
-        if (checkSelfPermission(this, permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED) {
-            updateCalendar(now, today)
-        }
+        val dateString = dateFormat.format(now)
+        val timeString = timeFormat.format(now)
+        date.text = dateString
+        time.text = timeString
     }
 
     private fun requestPermissionIfNeeded() {
@@ -55,17 +87,24 @@ class FullscreenActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateCalendar(now: Date, today: String) {
+    private fun updateCalendar() {
         try {
-            val startDay = now.time
-            val endDay = startDay + TimeUnit.DAYS.toMillis(1)
-            val projection = arrayOf(BaseColumns._ID, TITLE, DTSTART)
-            val selection = "$DTSTART >= ? AND $DTSTART<= ?"
-            val selectionArgs = arrayOf(java.lang.Long.toString(startDay), java.lang.Long.toString(endDay))
-            contentResolver.query(CONTENT_URI, projection, selection, selectionArgs, "$DTSTART ASC").use {
+            val now = Date()
+            val today = dayFormat.format(now).capitalize()
+            val startMillis = now.time
+            val endMillis = startMillis + TimeUnit.DAYS.toMillis(1)
+            val projection = arrayOf(BaseColumns._ID, TITLE, BEGIN)
+            val selection = "$BEGIN >= ?"
+            // Construct the query with the desired date range.
+            val builder = Instances.CONTENT_URI.buildUpon()
+            ContentUris.appendId(builder, startMillis)
+            ContentUris.appendId(builder, endMillis)
+            val selectionArgs = arrayOf("$startMillis")
+
+            contentResolver.query(builder.build(), projection, selection, selectionArgs, "$BEGIN ASC").use {
                 if (it.moveToFirst()) {
                     val eventTitle = it.getString(it.getColumnIndex(TITLE))
-                    val eventStart = it.getLong(it.getColumnIndex(DTSTART))
+                    val eventStart = it.getLong(it.getColumnIndex(BEGIN))
                     val eventDay = dayFormat.format(eventStart).capitalize()
                     val eventTime = timeFormat.format(eventStart)
                     val formatId = if (eventDay == today) R.string.today_format else R.string.tomorrow_format
